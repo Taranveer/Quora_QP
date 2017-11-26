@@ -254,33 +254,44 @@ class SIF_Model(object):
     
 
 
-    def getRanking(self, sent,n=10):
+    def getRanking(self, sent, n=10):
+        """
+        Get indices of top n sentence closest to the given sentence
+        param: sent - given sentence 
+        param: top n - no of ranked indices
+        return: ranked indices
+        """
         sent_embedding = normalize(self.getSIFEmbedding(sent))
-        trainEmbeddings = normalize(self.trainEmbeddings)
-       
-        #print "sent_embedding shape:",sent_embedding.shape
-        #print "train_embedding shape:",self.trainEmbeddings.shape
-        
+        trainEmbeddings = normalize(self.trainEmbeddings)        
         sentDistances = np.dot(trainEmbeddings, sent_embedding.T)
-        #print "sentDistances shape:", sentDistances.shape
         sentDistances = sentDistances.reshape(sentDistances.shape[0])
-        #print "sentDistances shape:", sentDistances.shape
         rankedIndices = sentDistances.argsort()[-n:][::-1]
-        #print "rankedIndices", rankedIndices
-        #print "sentDistances", sentDistances
+
         for idx in rankedIndices:
             print self.sentence_dict[idx]
         return rankedIndices
     
     def ComputePair(self, sent, index, topn=10):
+        """
+        Check if the given sentence's pair is in top 10 of it's similar sentences
+        param: sent - given sentence
+        param: index - index of given sentence, index + 10000 (index of paired sentence) ****
+        param: topn - no of similar sentences
+        return: rankedindices, d = {0,1} "1 if paired sentence in top 10 else 0"
+        """
         rankedIndices = self.getRanking(sent, topn)
-        index = 10000 + index
+        index = 10000 + index #index of paired sentence
         if index in rankedIndices:
             return rankedIndices, 1
         else:
             return rankedIndices, 0
         
     def classifyQPairs(self, topn=10):
+        """
+        Check if a sentence's pair is in top 10 of it's similar sentences
+        param: top n similar sentences to look at
+        return: predpair tup (index, rankedidx, dup) - dup index in ranked_index or not
+        """
         predPair = []
         cnt = 0.0
         for index, sent in self.sentence_dict.items():
@@ -297,6 +308,11 @@ class SIF_Model(object):
         return predPair
     
     def pairSentenceDistance(self, sent1, sent2):
+        """
+        Get Sentence cosine distance between sent1 and sent2
+        param: sent1, sent2
+        return: sentence distance
+        """
         sent1_emb = normalize(self.getSIFEmbedding(sent1))
         sent2_emb = normalize(self.getSIFEmbedding(sent2))
         #print sent1_emb.shape, sent2_emb.shape
@@ -304,10 +320,15 @@ class SIF_Model(object):
         return sent_dist
     
     def getAllSentenceDistance(self):
+        """
+        Get sentence distance between every pair of sentence
+        return: sentence distance list
+        """
         cnt = 0.0
         sent_dist_list = []
         for index1, sent1 in self.sentence_dict.items():
-            index2 = 10000 + index1
+            index2 = 10000 + index1 #index2: paired sentence *****
+            
             sent2 = self.sentence_dict[index2]
             dist = self.pairSentenceDistance(sent1, sent2)
             sent_dist_list.append(dist)
@@ -317,8 +338,7 @@ class SIF_Model(object):
             cnt+=1
             if cnt >= 10000:
                 break
-            #print sent1, sent2
-            #break
+            
             
         return sent_dist_list
             
