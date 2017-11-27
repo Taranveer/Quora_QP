@@ -11,23 +11,28 @@ from vocab_utils import *
 import pprint
 #import phrase_tagger
 from sklearn.preprocessing import normalize
+import pickle
 
 def parse_args():
     parser = ArgumentParser(description= "SIF Embedding")
 
     # data paths
     data_path = "../"
+    #name_tag = "_tfkld_dev"
+    name_tag = "_dev"
     #data_path = ""
     parser.add_argument('--data_path', default= data_path, type = str)
-    parser.add_argument('--sentence_file', default= data_path + "corpus/sentences_train_10000.pkl",type=str)
+    #parser.add_argument('--sentence_file_train', default= data_path + "corpus/sentences_train_10000.pkl",type=str)
+    parser.add_argument('--sentence_file', default= data_path + "corpus/sentences_dev_10000.pkl",type=str)
     parser.add_argument('--embeddings_file', default=data_path + '../glove.840B.300d.txt',type=str)
+    parser.add_argument('--tfkld_file', default=  data_path + 'models/tfkld_weights.pkl', type = str) 
 
 
     #save file path
     parser.add_argument('--vocab_file', default=data_path+"vocab_embedding/vocab_quora_train.txt",type=str)
     parser.add_argument('--trimmed_embedding_file', default=data_path+"vocab_embedding/trimmed_embeddings_train_quora.npz", type=str)
 
-    parser.add_argument('--object_file', default=data_path+"model/object_file_train_quora.npz", type=str)
+    parser.add_argument('--object_file', default=data_path+"models/object_file_train_quora" + name_tag + ".npz", type=str)
     #parser.add_argument('--concept_filenames', default="../concepts/concepts-union-clean.txt", type=str)
 
     # vocab building
@@ -37,6 +42,9 @@ def parse_args():
     # remove pca component
     parser.add_argument('--no_PCA', dest='pca', action='store_false')
     parser.set_defaults(pca=True)
+    
+    parser.add_argument('--TFKLD', dest='tfkld', action = 'store_true')
+    parser.set_defaults(tfkld=False)
 
     parser.add_argument('--n_components', default=1, type=int)
 
@@ -51,7 +59,7 @@ class SIF_Model(object):
     def __init__(self, args):
         self.args = args
         self.alpha = 1e-3
-        self.data = self.getData()
+        self.data = self.getData(self.args.sentence_file) #**** changed here ***
         self.vocab = args.vocab ### Loaded from vocab_utils in main() below, filename passed above
         self.word_embeddings = args.word_embeddings ### Loaded from vocab_utils in main() below, filename passed above
         self.VOCAB_SIZE = len(self.vocab) 
@@ -63,7 +71,11 @@ class SIF_Model(object):
         """
         Computes trainEmbeddings using SIF Method
         """
-        self.weights = self.getWeightedProbabilities() #getWeight corrosponding to each word
+        if not self.args.tfkld:
+            self.weights = self.getWeightedProbabilities() #getWeight corrosponding to each word
+        else:
+            self.weights = self.getWeightedProbabilities_tfkld()
+            
         self.sent_indices, self.sent_mask = self.createStructure() #getSequence of word indices for every sentence
         
         #get weights mapping to sentence sequence
@@ -107,8 +119,8 @@ class SIF_Model(object):
         print "Model Loaded"
 
 
-    def getData(self):
-        with open(self.args.sentence_file) as f:
+    def getData(self, sentence_filename): #**** changed here ***
+        with open(sentence_filename) as f:
             data = pickle.load(f)
             data = data[0]
             self.sentence_dict = dict(zip(range(0, len(data)), data))
@@ -117,7 +129,8 @@ class SIF_Model(object):
 
     def load_word_counters(self):
         vocab_count = Counter()
-        for line in self.data:
+        data = self.get_data(self.args.sentence_file_train) #******Changed here****** 
+        for line in data: #******Changed here********
             vocab_count.update(line)
 
         # Filter Count
@@ -133,11 +146,22 @@ class SIF_Model(object):
         """
         freqs = np.zeros((1, self.VOCAB_SIZE), dtype="float")
         for word in self.vocab:
-            idx = self.vocab[word]
-            freqs[0, idx] = self.vocab_count[word]
-
+            #if vocab.has_key(word): #added new line ***
+                idx = self.vocab[word]
+                freqs[0, idx] = self.vocab_count[word]
+             
+        
         probs = freqs / np.sum(freqs)
         weights = self.alpha / (self.alpha + probs)
+        
+        return weights
+    
+    def getWeightedProbabilities_tfkld(self):
+        """
+        get stored tfkld weights
+        """
+        weights = pickle.load(open(self.args.tfkld_file))
+        weights = weights.reshape(1, -1)
         return weights
 
     def printShapes(self):

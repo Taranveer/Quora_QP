@@ -1,5 +1,3 @@
-
-
 from tfkld import TFKLD
 import pandas as pd
 from scipy.sparse import vstack, lil_matrix
@@ -9,7 +7,7 @@ import numpy, gzip
 import cPickle as pickle
 import os
 import numpy as np
-
+from vocab_utils import load_vocab
 
 class DimReduction(object):
     def __init__(self, M, K):
@@ -29,7 +27,7 @@ class DimReduction(object):
     def nmf(self):
         pass
 
-data_path = "../../../"
+data_path = "../../"
 def dr(trainX, devX, testX, K=200):
     n_train = trainX.shape[0]
     n_dev = devX.shape[0]
@@ -80,10 +78,16 @@ def main():
 
     tfkld = TFKLD()
     print ("Fitting the model")
-    tfkld.fit(trainX, trainY)
     
-    pickle.dump(tfkld.weights, open("../../models/tfkld_weights.pkl", "wb"))
-    pickle.dump(tfkld.word2id, open("../../models/tfkld_word2id.pkl", "wb"))
+    #tfkld.fit(trainX, trainY)
+    
+    vocab_file = "../vocab_embedding/vocab_quora_train.txt"
+    vocab = load_vocab(vocab_file)
+    #print "vocab",vocab
+    tfkld._fit(trainX, trainY, vocab)
+    
+    pickle.dump(tfkld.weights, open("../models/tfkld_weights.pkl", "wb"))
+    pickle.dump(tfkld.word2id, open("../models/tfkld_word2id.pkl", "wb"))
 
     #print ("Loading Dev data")
     #dev_df = pd.read_csv(DEV_DATA, usecols=['question1', 'question2'])

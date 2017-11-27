@@ -30,7 +30,29 @@ class TFKLD(object):
 
         print ("Calculating Weights")
         self._calculate_weights(trainX, trainY)
+    
+    def _fit(self, trainX, trainY, vocab):
+        assert len(trainX) == 2*len(trainY)
+        print ("Training Size: {0}".format(len(trainX)))
 
+        #print ("Finding vocabulary")
+        #self.countizer = CountVectorizer(dtype=np.float32, ngram_range=(1,1),
+        #                                 encoding='latin-1', token_pattern=u'(?u)\\b\\w+\\b')
+        #self.countizer.fit(trainX)
+        #self.word2id = dict()
+        #for i, word in enumerate(self.countizer.get_feature_names()):
+        #    self.word2id[word] = i
+        
+        
+        self.word2id = vocab
+        self.nTerms = len(vocab.keys())
+
+        print ("Vocabulary Size: {0}".format(self.nTerms))
+
+        print ("Calculating Weights")
+        self._calculate_weights(trainX, trainY)
+        
+        
     def _calculate_weights(self, trainX, trainY):
         nSamples = len(trainX)
         count = np.ones((4, self.nTerms))
