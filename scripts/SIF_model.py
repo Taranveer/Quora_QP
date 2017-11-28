@@ -18,11 +18,11 @@ def parse_args():
 
     # data paths
     data_path = "../"
-    #name_tag = "_tfkld_dev"
+    #name_tag = "_tfkld"
     name_tag = "_dev"
     #data_path = ""
     parser.add_argument('--data_path', default= data_path, type = str)
-    #parser.add_argument('--sentence_file_train', default= data_path + "corpus/sentences_train_10000.pkl",type=str)
+    parser.add_argument('--sentence_file_train', default= data_path + "corpus/sentences_train_10000.pkl",type=str)
     parser.add_argument('--sentence_file', default= data_path + "corpus/sentences_dev_10000.pkl",type=str)
     parser.add_argument('--embeddings_file', default=data_path + '../glove.840B.300d.txt',type=str)
     parser.add_argument('--tfkld_file', default=  data_path + 'models/tfkld_weights.pkl', type = str) 
@@ -123,13 +123,15 @@ class SIF_Model(object):
         with open(sentence_filename) as f:
             data = pickle.load(f)
             data = data[0]
-            self.sentence_dict = dict(zip(range(0, len(data)), data))
+            if "dev" in sentence_filename:
+                self.sentence_dict = dict(zip(range(0, len(data)), data))
             data = [x.split() for x in data]
             return data
 
     def load_word_counters(self):
         vocab_count = Counter()
-        data = self.get_data(self.args.sentence_file_train) #******Changed here****** 
+        data = self.getData(self.args.sentence_file_train) #******Changed here****** 
+        
         for line in data: #******Changed here********
             vocab_count.update(line)
 
