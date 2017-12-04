@@ -2,7 +2,7 @@
 
 The models files are in scripts folder. 
 
-##Setup
+## Setup
 Install Dynet (with GPU support) by:
 
 ```bash 
