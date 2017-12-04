@@ -1,8 +1,14 @@
 # Quora_QP
 
-The models files are in scripts folder. 
+The model files are in scripts folder. 
 
 ## Setup
+On AWS server, clone the repo by typing:
+
+```bash
+git clone https://github.com/Taranveer/Quora_QP.git
+```
+
 Install Dynet (with GPU support) by:
 
 ```bash 
