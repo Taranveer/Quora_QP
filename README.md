@@ -20,3 +20,10 @@ bash install_dynet.bash
 ## Running the Decomposable Attention code:
 
 Simply run the jupyter notebook with the same name.
+
+### Monitering GPU resources:
+
+```bash
+nvidia-smi
+```
+
