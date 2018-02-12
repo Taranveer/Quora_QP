@@ -1,5 +1,5 @@
 # 17 Nov 2017
-# By: Aldrian Obaja
+# By: Prashant Budania
 # The script to install Dynet
 
 # Need to change to CUDA 8 because DyNet doesn't work in CUDA 9
